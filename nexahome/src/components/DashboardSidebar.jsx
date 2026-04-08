@@ -1,5 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard,
   Laptop2,
@@ -11,6 +12,7 @@ import {
 const DashboardSidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const menuItems = [
     {
@@ -82,7 +84,7 @@ const DashboardSidebar = ({ isOpen, setIsOpen }) => {
         }`}>
           <button
             onClick={() => {
-              // TODO: Implement logout
+              logout();
               navigate('/login');
             }}
             title="Logout"

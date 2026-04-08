@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
-import { Menu, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Menu, User, LogOut } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const DashboardNavbar = ({ isOpen, setIsOpen }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const navigate = useNavigate();
+  const { logout } = useAuth();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-slate-950 via-slate-950 to-black border-b border-slate-800 backdrop-blur-sm h-16">
@@ -48,6 +52,22 @@ const DashboardNavbar = ({ isOpen, setIsOpen }) => {
               </span>
             </button>
 
+            {/* Dropdown Menu */}
+            {showUserMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-slate-900 border border-slate-700 rounded-lg shadow-xl z-50">
+                <button
+                  onClick={() => {
+                    logout();
+                    navigate('/login');
+                    setShowUserMenu(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors text-left"
+                >
+                  <LogOut size={18} />
+                  <span>Logout</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

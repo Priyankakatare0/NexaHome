@@ -1,8 +1,46 @@
 import React, { useState } from 'react';
 import { Clock, Trash2, ToggleRight } from 'lucide-react';
+import api from '../api/axios';
 
-const ScheduleRow = ({ schedule }) => {
+const ScheduleRow = ({ schedule, onScheduleUpdate }) => {
   const [isEnabled, setIsEnabled] = useState(schedule?.enabled || false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleUpdate = async () => {
+    try {
+      const newEnabled = !isEnabled;
+      const res = await api.put(`/schedules/${schedule.id}`, {
+        enabled: newEnabled
+      });
+      
+      if(res.data.status === 'success') {
+        setIsEnabled(newEnabled);
+        if(onScheduleUpdate) onScheduleUpdate();
+      }
+    } catch (error) {
+      console.error('Error updating schedule:', error);
+      alert('Failed to update schedule');
+      setIsEnabled(!isEnabled);
+    }
+  };
+
+  const handleDelete = async () => {
+    if(!window.confirm('Are you sure you want to delete this schedule?')) return;
+    
+    setIsDeleting(true);
+    try {
+      const res = await api.delete(`/schedules/${schedule.id}`);
+      
+      if(res.data.status === 'success') {
+        if(onScheduleUpdate) onScheduleUpdate();
+      }
+    } catch (error) {
+      console.error('Error deleting schedule:', error);
+      alert('Failed to delete schedule');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div className="bg-gradient-to-r from-slate-900/50 to-slate-950/50 border border-slate-800 rounded-lg p-6 flex items-center justify-between hover:border-slate-700 transition-all duration-200">
@@ -14,7 +52,7 @@ const ScheduleRow = ({ schedule }) => {
         <div className="flex-1">
           <h3 className="text-lg font-semibold text-white">{schedule?.name}</h3>
           <p className="text-sm text-slate-500">
-            {schedule?.device} · {schedule?.time} · {schedule?.frequency}
+            {schedule?.devices?.name || 'Unknown Device'} · {schedule?.time} · {schedule?.day}
           </p>
         </div>
       </div>
@@ -22,7 +60,7 @@ const ScheduleRow = ({ schedule }) => {
       {/* Right Section - Toggle and Delete */}
       <div className="flex items-center gap-4 ml-4">
         <button
-          onClick={() => setIsEnabled(!isEnabled)}
+          onClick={handleUpdate}
           className={`p-2 rounded-lg transition-colors ${
             isEnabled
               ? 'bg-cyan-500/20 hover:bg-cyan-500/30'
@@ -33,7 +71,9 @@ const ScheduleRow = ({ schedule }) => {
           <ToggleRight size={20} className={isEnabled ? 'text-cyan-400' : 'text-slate-400'} />
         </button>
         <button
-          className="p-2 hover:bg-red-500/20 rounded-lg transition-colors"
+          onClick={handleDelete}
+          disabled={isDeleting}
+          className="p-2 hover:bg-red-500/20 rounded-lg transition-colors disabled:opacity-50"
           title="Delete schedule"
         >
           <Trash2 size={20} className="text-slate-400 hover:text-red-400" />

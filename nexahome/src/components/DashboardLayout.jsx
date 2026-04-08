@@ -1,10 +1,22 @@
 import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, Navigate } from 'react-router-dom';
 import DashboardSidebar from './DashboardSidebar';
 import DashboardNavbar from './DashboardNavbar';
+import { useAuth } from '../context/AuthContext';
 
 const DashboardLayout = () => {
   const [isOpen, setIsOpen] = useState(true);
+  const { user, isLoading } = useAuth();
+
+  // If still loading, return null
+  if (isLoading) {
+    return null;
+  }
+
+  // If not authenticated, redirect to login
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-slate-950 to-black">
