@@ -3,10 +3,4 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [tailwindcss()],
-  server: {
-    host: true,
-    allowedHosts: [
-      "loni-sapid-ava.ngrok-free.dev"
-    ]
-  }
 })

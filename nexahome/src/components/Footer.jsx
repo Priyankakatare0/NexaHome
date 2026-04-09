@@ -16,7 +16,7 @@ const Footer = () => {
 
                 <div>
                     <h4 className="mb-4 text-lg font-semibold text-white">Platform</h4>
-                    <ul className="space-y-4 text-base text-[#6b7a9e]">
+                    <ul className="space-y-4 text-base textt-[#6b7a9e]">
                         <li><Link to="/dashboard" className="hover:text-cyan-500 transition-colors">Dashboard</Link></li>
                         <li><Link to="/devices" className="hover:text-cyan-500 transition-colors">My Devices</Link></li>
                         <li><Link to="/schedules" className="hover:text-cyan-500 transition-colors">Schedules</Link></li>
