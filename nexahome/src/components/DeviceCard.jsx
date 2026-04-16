@@ -1,20 +1,25 @@
+
 import React, { useState } from 'react';
+import DeviceSettingsModal from './DeviceSettingsModal';
 import { Settings } from 'lucide-react';
 import api from '../api/axios';
+import socket from '../api/socket';
 
 const DeviceCard = ({ device, onDeviceUpdate }) => {
   const [isToggling, setIsToggling] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const handleToggle = async () => {
     setIsToggling(true);
     try {
-      const res = await api.put(`/devices/${device.id}/toggle`, {
+      // Emit real-time toggle event
+      socket.emit('deviceStateChange', { deviceId: device.id, newState: !device.state });
+      // Also call API for DB sync (optional, for compatibility)
+      await api.put(`/devices/${device.id}/toggle`, {
         state: !device.state
       });
-      if(res.data.status === 'success') {
-        if(onDeviceUpdate) {
-          onDeviceUpdate();
-        }
+      if(onDeviceUpdate) {
+        onDeviceUpdate();
       }
     } catch (error) {
       console.error('Error toggling device:', error);
@@ -24,11 +29,13 @@ const DeviceCard = ({ device, onDeviceUpdate }) => {
     }
   };
 
+
   const handleDelete = async () => {
     if(window.confirm('Are you sure you want to delete this device?')) {
       try {
         const res = await api.delete(`/devices/${device.id}`);
         if(res.data.status === 'success') {
+          setShowSettings(false);
           if(onDeviceUpdate) {
             onDeviceUpdate();
           }
@@ -36,6 +43,20 @@ const DeviceCard = ({ device, onDeviceUpdate }) => {
       } catch (error) {
         alert('Error deleting device: ' + (error.response?.data?.message || error.message));
       }
+    }
+  };
+
+  const handleEdit = async (updates) => {
+    try {
+      const res = await api.put(`/devices/${device.id}`, updates);
+      if(res.data.status === 'success') {
+        setShowSettings(false);
+        if(onDeviceUpdate) {
+          onDeviceUpdate();
+        }
+      }
+    } catch (error) {
+      alert('Error updating device: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -53,10 +74,18 @@ const DeviceCard = ({ device, onDeviceUpdate }) => {
           </div>
         </div>
         <button 
-          onClick={handleDelete}
+          onClick={() => setShowSettings(true)}
           className="p-2 hover:bg-slate-800 rounded-lg transition-colors">
-          <Settings size={20} className="text-slate-400 hover:text-red-400" />
+          <Settings size={20} className="text-slate-400 hover:text-cyan-400" />
         </button>
+            {/* Device Settings Modal */}
+            <DeviceSettingsModal
+              device={device}
+              open={showSettings}
+              onClose={() => setShowSettings(false)}
+              onSave={handleEdit}
+              onDelete={handleDelete}
+            />
       </div>
 
       {/* Device Key */}

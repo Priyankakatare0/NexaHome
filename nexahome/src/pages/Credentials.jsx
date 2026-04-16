@@ -100,8 +100,7 @@ const Credentials = () => {
             <CheckCircle className="text-emerald-500 flex-shrink-0 mt-1" size={24} />
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-emerald-400 mb-4">✅ Credential Created Successfully!</h3>
-              <p className="text-emerald-300 text-sm mb-4">Save these credentials securely. You won't be able to see the API Secret again.</p>
-              
+              <p className="text-emerald-300 text-sm mb-4">Save this API Key securely. You can always view or copy it from the credentials page.</p>
               <div className="space-y-3 bg-slate-900 rounded p-4 mb-4">
                 <div>
                   <label className="block text-emerald-300 text-xs font-medium mb-1">API Key</label>
@@ -117,22 +116,7 @@ const Credentials = () => {
                     </button>
                   </div>
                 </div>
-                <div>
-                  <label className="block text-emerald-300 text-xs font-medium mb-1">API Secret</label>
-                  <div className="flex items-center gap-2">
-                    <code className="flex-1 text-emerald-200 bg-slate-800 px-3 py-2 rounded font-mono text-sm break-all">
-                      {newCredential.api_secret}
-                    </code>
-                    <button
-                      onClick={() => copyToClipboard(newCredential.api_secret, 'API Secret')}
-                      className="p-2 hover:bg-slate-700 rounded transition-colors"
-                    >
-                      <Copy size={16} className="text-emerald-400" />
-                    </button>
-                  </div>
-                </div>
               </div>
-              
               <button
                 onClick={() => setNewCredential(null)}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded"
@@ -200,59 +184,82 @@ const Credentials = () => {
             </div>
           </div>
         ) : (
-          credentials.map((cred) => (
-            <div
-              key={cred.id}
-              className="bg-gradient-to-r from-slate-900/50 to-slate-950/50 border border-slate-800 rounded-lg p-6 hover:border-slate-700 transition-all duration-200"
-            >
-              {/* Left Section - Icon and Info */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-4 flex-1">
-                  <div className="w-12 h-12 bg-cyan-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                    🔑
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <h3 className="text-lg font-semibold text-white">{cred.name}</h3>
-                      {cred.is_active ? (
-                        <span className="px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-medium rounded">
-                          Active
-                        </span>
-                      ) : (
-                        <span className="px-2 py-1 bg-red-500/20 text-red-400 text-xs font-medium rounded">
-                          Revoked
-                        </span>
-                      )}
+          credentials.map((cred) => {
+            // Masking helpers
+            const mask = (str, visible = 4) => str ? `${str.slice(0, visible)}${'•'.repeat(Math.max(0, str.length - 2*visible))}${str.slice(-visible)}` : '';
+            const showKey = showFullKey[cred.id]?.api_key;
+            return (
+              <div
+                key={cred.id}
+                className="bg-gradient-to-r from-slate-900/50 to-slate-950/50 border border-slate-800 rounded-lg p-6 hover:border-slate-700 transition-all duration-200"
+              >
+                {/* Left Section - Icon and Info */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-4 flex-1">
+                    <div className="w-12 h-12 bg-cyan-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                      🔑
                     </div>
-                    <p className="text-sm text-slate-500">
-                      API Key: {cred.api_key}
-                      {cred.last_used && ` · Last used: ${new Date(cred.last_used).toLocaleDateString()}`}
-                    </p>
-                    <p className="text-xs text-slate-600">Created: {new Date(cred.created_at).toUTCString()}</p>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-lg font-semibold text-white">{cred.name}</h3>
+                        {cred.is_active ? (
+                          <span className="px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-medium rounded">
+                            Active
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 bg-red-500/20 text-red-400 text-xs font-medium rounded">
+                            Revoked
+                          </span>
+                        )}
+                      </div>
+                      {/* API Key Row */}
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-xs text-slate-400 font-semibold w-16">API Key</span>
+                        <code className="flex-1 text-cyan-300 bg-slate-800 px-2 py-1 rounded font-mono text-xs break-all">
+                          {showKey ? cred.api_key : mask(cred.api_key)}
+                        </code>
+                        <button
+                          onClick={() => setShowFullKey((prev) => ({...prev, [cred.id]: {...prev[cred.id], api_key: !showKey}}))}
+                          className="p-1 hover:bg-slate-700 rounded transition-colors"
+                          title={showKey ? 'Hide' : 'Show'}
+                        >
+                          <Eye size={16} className="text-cyan-400" />
+                        </button>
+                        <button
+                          onClick={() => copyToClipboard(cred.api_key, 'API Key')}
+                          className="p-1 hover:bg-slate-700 rounded transition-colors"
+                          title="Copy API Key"
+                        >
+                          <Copy size={16} className="text-cyan-400" />
+                        </button>
+                      </div>
+                      <p className="text-xs text-slate-600 mt-2">Created: {new Date(cred.created_at).toUTCString()}</p>
+                      {cred.last_used && <p className="text-xs text-slate-700">Last used: {new Date(cred.last_used).toLocaleDateString()}</p>}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Actions */}
-              <div className="flex gap-2 justify-end">
-                {cred.is_active && (
+                {/* Actions */}
+                <div className="flex gap-2 justify-end">
+                  {cred.is_active && (
+                    <button
+                      onClick={() => handleRevoke(cred.id)}
+                      className="px-4 py-2 bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-400 border border-yellow-600/50 rounded-lg font-medium text-sm transition-colors"
+                    >
+                      Revoke
+                    </button>
+                  )}
                   <button
-                    onClick={() => handleRevoke(cred.id)}
-                    className="px-4 py-2 bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-400 border border-yellow-600/50 rounded-lg font-medium text-sm transition-colors"
+                    onClick={() => handleDelete(cred.id)}
+                    className="px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-600/50 rounded-lg font-medium text-sm transition-colors flex items-center gap-2"
                   >
-                    Revoke
+                    <Trash2 size={16} />
+                    Delete
                   </button>
-                )}
-                <button
-                  onClick={() => handleDelete(cred.id)}
-                  className="px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-600/50 rounded-lg font-medium text-sm transition-colors flex items-center gap-2"
-                >
-                  <Trash2 size={16} />
-                  Delete
-                </button>
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 

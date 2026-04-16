@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 const DashboardNavbar = ({ isOpen, setIsOpen }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-slate-950 via-slate-950 to-black border-b border-slate-800 backdrop-blur-sm h-16">
@@ -45,10 +45,10 @@ const DashboardNavbar = ({ isOpen, setIsOpen }) => {
               className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-800 transition-colors"
             >
               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-sm font-bold">
-                U
+                {user?.name ? user.name[0].toUpperCase() : 'U'}
               </div>
               <span className="text-base text-lg text-slate-200 hidden sm:inline font-medium">
-                User
+                {user?.name || 'User'}
               </span>
             </button>
 

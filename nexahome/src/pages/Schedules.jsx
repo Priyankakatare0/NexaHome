@@ -116,15 +116,36 @@ const Schedules = () => {
               </div>
             </div>
             <div>
-              <label className="block text-white text-sm font-medium mb-2">Days (1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat, 0=Sun)</label>
-              <input
-                type="text"
-                placeholder="1,2,3,4,5"
-                value={formData.days}
-                onChange={(e) => setFormData({...formData, days: e.target.value})}
-                className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white"
-                required
-              />
+              <label className="block text-white text-sm font-medium mb-2">Days</label>
+              <div className="flex gap-2 flex-wrap">
+                {[
+                  { label: 'Mon', value: '1' },
+                  { label: 'Tue', value: '2' },
+                  { label: 'Wed', value: '3' },
+                  { label: 'Thu', value: '4' },
+                  { label: 'Fri', value: '5' },
+                  { label: 'Sat', value: '6' },
+                  { label: 'Sun', value: '0' },
+                ].map(day => (
+                  <button
+                    type="button"
+                    key={day.value}
+                    className={`px-3 py-1 rounded-full border text-xs font-semibold transition-colors focus:outline-none ${formData.days.split(',').includes(day.value)
+                      ? 'bg-cyan-500 text-black border-cyan-600'
+                      : 'bg-slate-800 text-white border-slate-700 hover:bg-slate-700'}`}
+                    onClick={() => {
+                      const daysArr = formData.days.split(',').filter(Boolean);
+                      if (daysArr.includes(day.value)) {
+                        setFormData({ ...formData, days: daysArr.filter(d => d !== day.value).join(',') });
+                      } else {
+                        setFormData({ ...formData, days: [...daysArr, day.value].sort().join(',') });
+                      }
+                    }}
+                  >
+                    {day.label}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="flex gap-2">
               <button
@@ -161,6 +182,7 @@ const Schedules = () => {
               key={schedule.id} 
               schedule={schedule}
               onScheduleUpdate={fetchSchedules}
+              devices={devices}
             />
           ))
         )}

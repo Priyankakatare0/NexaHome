@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import api from '../api/axios';
 import DeviceCard from '../components/DeviceCard';
+import socket from '../api/socket';
 
 const Devices = () => {
   const [devices, setDevices] = useState([]);
@@ -9,8 +10,33 @@ const Devices = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [formData, setFormData] = useState({ name: '', type: 'switch' });
 
+
   useEffect(() => {
     fetchDevices();
+
+    // Socket.IO: Listen for real-time device state updates
+    socket.on('deviceStateUpdate', ({ deviceId, newState }) => {
+      setDevices((prevDevices) =>
+        prevDevices.map((d) =>
+          d.id === deviceId ? { ...d, state: newState } : d
+        )
+      );
+    });
+
+    // On mount, request all device states
+    socket.emit('getAllDeviceStates');
+    socket.on('allDeviceStates', (states) => {
+      setDevices((prevDevices) =>
+        prevDevices.map((d) =>
+          states[d.id] !== undefined ? { ...d, state: states[d.id] } : d
+        )
+      );
+    });
+
+    return () => {
+      socket.off('deviceStateUpdate');
+      socket.off('allDeviceStates');
+    };
   }, []);
 
   const fetchDevices = async () => {

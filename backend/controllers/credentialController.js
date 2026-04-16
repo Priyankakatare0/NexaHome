@@ -1,11 +1,9 @@
 import crypto from 'crypto';
 import supabase from '../config/supabase.js';
 
-// Generate secure API key and secret
-const generateCredentials = () => {
-  const apiKey = 'nk_' + crypto.randomBytes(24).toString('hex');
-  const apiSecret = crypto.randomBytes(32).toString('hex');
-  return { apiKey, apiSecret };
+// Generate secure API key only
+const generateApiKey = () => {
+  return 'nk_' + crypto.randomBytes(24).toString('hex');
 };
 
 // Get all credentials for a user
@@ -24,15 +22,10 @@ export const getCredentials = async (req, res) => {
       });
     }
 
-    // Mask API keys for security
-    const maskedCredentials = data.map(cred => ({
-      ...cred,
-      api_key: cred.api_key.slice(0, 10) + '...' + cred.api_key.slice(-4)
-    }));
-
+    // Return full API key to the owner
     res.status(200).json({
       status: 'success',
-      data: maskedCredentials
+      data
     });
   } catch (error) {
     res.status(500).json({
@@ -55,7 +48,7 @@ export const createCredential = async (req, res) => {
       });
     }
 
-    const { apiKey, apiSecret } = generateCredentials();
+    const apiKey = generateApiKey();
 
     const { data, error } = await supabase
       .from('credentials')
@@ -63,7 +56,6 @@ export const createCredential = async (req, res) => {
         user_id: req.user.id,
         name,
         api_key: apiKey,
-        api_secret: apiSecret,
         is_active: true
       }])
       .select();
@@ -83,8 +75,7 @@ export const createCredential = async (req, res) => {
       data: {
         id: cred.id,
         name: cred.name,
-        api_key: cred.api_key, // Return full key only on creation
-        api_secret: cred.api_secret, // Return full secret only on creation
+        api_key: cred.api_key,
         is_active: cred.is_active,
         created_at: cred.created_at
       }
@@ -122,8 +113,7 @@ export const getFullCredential = async (req, res) => {
       data: {
         id: credential.id,
         name: credential.name,
-        api_key: credential.api_key,
-        api_secret: credential.api_secret
+        api_key: credential.api_key
       }
     });
   } catch (error) {
@@ -239,12 +229,12 @@ export const deleteCredential = async (req, res) => {
 // Validate API key (for device authentication)
 export const validateApiKey = async (req, res) => {
   try {
-    const { api_key, api_secret } = req.body;
+    const { api_key } = req.body;
 
-    if (!api_key || !api_secret) {
+    if (!api_key) {
       return res.status(400).json({
         status: 'error',
-        message: 'API key and secret required'
+        message: 'API key required'
       });
     }
 
@@ -252,7 +242,6 @@ export const validateApiKey = async (req, res) => {
       .from('credentials')
       .select('*')
       .eq('api_key', api_key)
-      .eq('api_secret', api_secret)
       .eq('is_active', true)
       .single();
 

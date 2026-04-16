@@ -15,12 +15,12 @@ const createCredentialsTable = async () => {
     await client.connect();
 
     const createTableSQL = `
+
       CREATE TABLE IF NOT EXISTS public.credentials (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
         name TEXT NOT NULL,
         api_key TEXT NOT NULL UNIQUE,
-        api_secret TEXT NOT NULL,
         is_active BOOLEAN DEFAULT true,
         last_used TIMESTAMPTZ,
         created_at TIMESTAMPTZ DEFAULT now()
@@ -38,12 +38,12 @@ const createCredentialsTable = async () => {
     console.error('❌ Error:', error.message);
     console.log('\n📝 Please run this SQL in Supabase SQL Editor instead:');
     console.log(`
+
       CREATE TABLE IF NOT EXISTS credentials (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
         name TEXT NOT NULL,
         api_key TEXT NOT NULL UNIQUE,
-        api_secret TEXT NOT NULL,
         is_active BOOLEAN DEFAULT true,
         last_used TIMESTAMPTZ,
         created_at TIMESTAMPTZ DEFAULT now()

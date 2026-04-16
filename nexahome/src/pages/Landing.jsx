@@ -96,8 +96,8 @@ const Landing = () => {
                 <Navbar />
                 <HeroSection />
                 <StatsBar />
-                <HowItWorks steps={steps} />
                 <FeaturesGrid features={features} />
+                <HowItWorks steps={steps} />
                 <HardwareSection hardware={hardware} />
                 <SchedulerSection schedules={schedules} />
                 <CTASection />

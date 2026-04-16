@@ -1,24 +1,44 @@
-import express from 'express'
-import cors from 'cors'
-import dotenv from 'dotenv'
-import supabase from './config/supabase.js'
-import authRoutes from './routes/authRoutes.js'
-import deviceRoutes from './routes/deviceRoutes.js'
-import scheduleRoutes from './routes/scheduleRoutes.js'
-import logRoutes from './routes/logRoutes.js'
-import credentialRoutes from './routes/credentialRoutes.js'
-import { startScheduler } from './services/schedulerService.js'
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import http from 'http';
+import { Server as SocketIOServer } from 'socket.io';
+import supabase from './config/supabase.js';
+import authRoutes from './routes/authRoutes.js';
+import deviceRoutes from './routes/deviceRoutes.js';
+import scheduleRoutes from './routes/scheduleRoutes.js';
+import logRoutes from './routes/logRoutes.js';
+import credentialRoutes from './routes/credentialRoutes.js';
+import { startScheduler } from './services/schedulerService.js';
 
-dotenv.config()
-startScheduler()
+dotenv.config();
+startScheduler();
 
-const app = express()
+const app = express();
+
+// CORS setup (allow frontend, credentials, preflight)
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://nexahome.onrender.com',
+];
+
+const server = http.createServer(app);
+const io = new SocketIOServer(server, {
+    cors: {
+        origin: allowedOrigins,
+        credentials: true,
+        methods: ['GET', 'POST']
+    }
+});
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors())
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+app.use(cors({
+    origin: allowedOrigins,
+    credentials: true,
+}));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 //Test Supabase connection
 app.get('/api/health', async (req, res) => {
@@ -73,7 +93,31 @@ app.use((err, req, res) => {
 });
 
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+// --- Socket.IO logic for real-time device state sync ---
+// In-memory device state (replace with DB in production)
+const deviceStates = {};
+
+io.on('connection', (socket) => {
+    console.log('Socket.IO client connected:', socket.id);
+
+    // Client requests all device states
+    socket.on('getAllDeviceStates', () => {
+        socket.emit('allDeviceStates', deviceStates);
+    });
+
+    // Device state change from client
+    socket.on('deviceStateChange', ({ deviceId, newState }) => {
+        deviceStates[deviceId] = newState;
+        io.emit('deviceStateUpdate', { deviceId, newState });
+    });
+
+    // Log all deviceStateUpdate events sent to clients
+    socket.on('deviceStateUpdate', ({ deviceId, newState }) => {
+        console.log(`[SOCKET] deviceStateUpdate event received by socket ${socket.id}: deviceId=${deviceId}, newState=${JSON.stringify(newState)}`);
+    });
+});
+
+server.listen(PORT, () => {
+    console.log(`Server (API + Socket.IO) running on port ${PORT}`);
     console.log(`Health check endpoint: http://localhost:${PORT}/api/health`);
 });

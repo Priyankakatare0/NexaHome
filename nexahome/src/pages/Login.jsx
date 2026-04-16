@@ -1,24 +1,42 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import api from '../api/axios';
+import { useAuth } from '../context/AuthContext';
+import { Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showForgot, setShowForgot] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const res = await api.post('/auth/login', { email, password });
       if(res.data.status === 'success') {
-        localStorage.setItem('token', res.data.token);
-        localStorage.setItem('user', JSON.stringify(res.data.user));
+        // Update context state immediately
+        login(res.data.user, res.data.token);
         navigate('/dashboard');
       }
     } catch (error) {
       alert('Login failed: ' + (error.response?.data?.message || error.message));
     }
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/auth/forgot-password', { email: resetEmail });
+      alert("If an account exists, a reset email has been sent.");
+    } catch (err) {
+      alert("Failed to send reset email.");
+    }
+    setShowForgot(false);
+    setResetEmail("");
   };
 
   return (
@@ -52,50 +70,94 @@ const Login = () => {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-3">
-              {/* Email Field */}
-              <div>
+            {showForgot ? (
+              <form
+                onSubmit={handleForgotPassword}
+                className="mt-4 flex flex-col gap-2"
+              >
                 <label className="block text-md font-medium text-slate-300 mb-2">
-                  Email
+                  Enter your email to reset password
                 </label>
                 <input
                   type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600/50 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent transition-all"
+                  placeholder="Enter your email"
+                  value={resetEmail}
+                  onChange={e => setResetEmail(e.target.value)}
                   required
+                  className="px-3 py-2 rounded border border-slate-600 bg-slate-800 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                 />
-              </div>
-
-              {/* Password Field */}
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <label className="block text-md font-medium text-slate-300">
-                    Password
+                <button
+                  type="submit"
+                  className="bg-cyan-500 text-black font-semibold rounded hover:bg-cyan-400 transition-all py-2"
+                >
+                  Send Reset Email
+                </button>
+                <button
+                  type="button"
+                  className="text-cyan-400 mt-2"
+                  onClick={() => setShowForgot(false)}
+                >
+                  Back to Login
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-3">
+                {/* Email Field */}
+                <div>
+                  <label className="block text-md font-medium text-slate-300 mb-2">
+                    Email
                   </label>
-                  <a href="#" className="text-sm text-cyan-500 hover:text-cyan-400 transition-colors">
-                    Forgot password?
-                  </a>
+                  <input
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600/50 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent transition-all"
+                    required
+                  />
                 </div>
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600/50 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent transition-all"
-                  required
-                />
-              </div>
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                className="w-full py-2 mt-4 bg-cyan-500 text-black font-semibold rounded-lg hover:bg-cyan-400 transition-all duration-200 shadow-lg shadow-cyan-500/50 hover:shadow-cyan-400/60"
-              >
-                Sign in
-              </button>
-            </form>
+                {/* Password Field */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-md font-medium text-slate-300">
+                      Password
+                    </label>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600/50 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent transition-all pr-10"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-cyan-400 focus:outline-none"
+                      tabIndex={-1}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                  <p className="text-sm text-cyan-500 hover:text-cyan-400 transition-colors mt-2 cursor-pointer" 
+                    onClick={() => setShowForgot(true)}>
+                    Forgot password?
+                  </p>
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  className="w-full py-2 mt-4 bg-cyan-500 text-black font-semibold rounded-lg hover:bg-cyan-400 transition-all duration-200 shadow-lg shadow-cyan-500/50 hover:shadow-cyan-400/60"
+                >
+                  Sign in
+                </button>
+              </form>
+            )}
 
             {/* Sign Up Link */}
             <p className="text-center text-md text-slate-400 mt-7">

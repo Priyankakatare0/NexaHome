@@ -1,11 +1,13 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import api from '../api/axios';
 
 const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -13,13 +15,8 @@ const Register = () => {
     try {
       const res = await api.post('/auth/register', { name, email, password });
       if(res.data.status === 'success') {
-        // Auto login after registration
-        const loginRes = await api.post('/auth/login', { email, password });
-        if(loginRes.data.status === 'success') {
-          localStorage.setItem('token', loginRes.data.token);
-          localStorage.setItem('user', JSON.stringify(loginRes.data.user));
-          navigate('/dashboard');
-        }
+        alert('Registration successful! Please check your email to verify your account before logging in.');
+        navigate('/login');
       }
     } catch (error) {
       alert('Registration failed: ' + (error.response?.data?.message || error.message));
@@ -91,13 +88,24 @@ const Register = () => {
               <label className="block text-md font-medium text-slate-300 mb-2">
                 Password
               </label>
-              <input
-                type="password"
-                placeholder="Min. 8 characters"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600/50 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent transition-all"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Min. 8 characters"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-2 bg-slate-700/40 border border-slate-600/50 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent transition-all pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-cyan-400 focus:outline-none"
+                  tabIndex={-1}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
 
             {/* Submit Button */}

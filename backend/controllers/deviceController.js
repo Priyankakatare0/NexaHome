@@ -1,3 +1,65 @@
+// Edit device (name/type)
+export const editDevice = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, type } = req.body;
+
+    // Validation
+    if (!name && !type) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'At least one of name or type is required'
+      });
+    }
+
+    // Verify user owns the device
+    const { data: device, error: fetchError } = await supabase
+      .from('devices')
+      .select('user_id')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !device) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Device not found'
+      });
+    }
+    if (device.user_id !== req.user.id) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Unauthorized to edit this device'
+      });
+    }
+
+    // Update device
+    const updateFields = {};
+    if (name) updateFields.name = name;
+    if (type) updateFields.type = type;
+    const { data: updated, error: updateError } = await supabase
+      .from('devices')
+      .update(updateFields)
+      .eq('id', id)
+      .select();
+
+    if (updateError) {
+      return res.status(400).json({
+        status: 'error',
+        message: updateError.message
+      });
+    }
+    res.status(200).json({
+      status: 'success',
+      message: 'Device updated successfully',
+      data: updated[0]
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: error.message
+    });
+  }
+};
 import { v4 as uuidv4 } from 'uuid';
 import supabase from '../config/supabase.js';
 
@@ -7,7 +69,9 @@ export const getDevices = async (req, res) => {
     const { data, error } = await supabase
       .from('devices')
       .select('*')
-      .eq('user_id', req.user.id);
+      .eq('user_id', req.user.id)
+      .order('state', { ascending: false }) // On first
+      .order('is_active', { ascending: false }) // Then active
 
     if (error) {
       return res.status(400).json({
@@ -201,14 +265,17 @@ export const deleteDevice = async (req, res) => {
     }
 
     // Create a log entry before deletion
-    await supabase
-      .from('device_logs')
-      .insert([{
-        device_id: id,
-        action: 'Device Deleted',
-        triggered_by: 'user'
-      }])
-      .catch(err => console.error('Failed to create log entry:', err));
+    try {
+      await supabase
+        .from('device_logs')
+        .insert([{
+          device_id: id,
+          action: 'Device Deleted',
+          triggered_by: 'user'
+        }]);
+    } catch (err) {
+      console.error('Failed to create log entry:', err);
+    }
 
     // Delete device
     const { error } = await supabase

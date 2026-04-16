@@ -4,6 +4,14 @@ import { useNavigate } from 'react-router-dom'
 const Navbar = () => {
     const navigate = useNavigate()
 
+    // Smooth scroll handler
+    const handleScroll = (sectionId) => {
+        const section = document.getElementById(sectionId);
+        if (section) {
+            section.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
     return (
         <nav className="sticky top-0 z-50 flex w-full items-center justify-between border-b border-white/[0.08] bg-[#06080f]/80 px-10 py-4 backdrop-blur-xl">
             <div className="flex items-center gap-3">
@@ -12,10 +20,10 @@ const Navbar = () => {
             </div>
 
             <ul className="hidden items-center gap-9 md:flex">
-                <li><a href="#features" className="text-base text-[#9aa3be] hover:text-white">Features</a></li>
-                <li><a href="#how" className="text-base text-[#9aa3be] hover:text-white">How it works</a></li>
-                <li><a href="#devices" className="text-base text-[#9aa3be] hover:text-white">Devices</a></li>
-                <li><a href="#schedule" className="text-base text-[#9aa3be] hover:text-white">Scheduler</a></li>
+                <li><button onClick={() => handleScroll('features')} className="text-base text-[#9aa3be] hover:text-white bg-transparent border-none outline-none cursor-pointer">Features</button></li>
+                <li><button onClick={() => handleScroll('how')} className="text-base text-[#9aa3be] hover:text-white bg-transparent border-none outline-none cursor-pointer">How it works</button></li>
+                <li><button onClick={() => handleScroll('devices')} className="text-base text-[#9aa3be] hover:text-white bg-transparent border-none outline-none cursor-pointer">Devices</button></li>
+                <li><button onClick={() => handleScroll('schedule')} className="text-base text-[#9aa3be] hover:text-white bg-transparent border-none outline-none cursor-pointer">Scheduler</button></li>
             </ul>
 
             <div className="flex items-center gap-3">

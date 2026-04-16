@@ -137,7 +137,7 @@ export const addSchedule = async (req, res) => {
 export const updateSchedule = async (req, res) => {
   try {
     const { id } = req.params;
-    const { action, time, days, is_active } = req.body;
+    const { device_id, action, time, days, is_active } = req.body;
 
     // Get schedule and verify user owns the device
     const { data: schedule, error: scheduleError } = await supabase
@@ -153,11 +153,12 @@ export const updateSchedule = async (req, res) => {
       });
     }
 
-    // Verify device belongs to user
+    // If device_id is being changed, verify new device belongs to user
+    let deviceCheckId = device_id || schedule.device_id;
     const { data: device, error: deviceError } = await supabase
       .from('devices')
       .select('id')
-      .eq('id', schedule.device_id)
+      .eq('id', deviceCheckId)
       .eq('user_id', req.user.id)
       .single();
 
@@ -170,6 +171,7 @@ export const updateSchedule = async (req, res) => {
 
     // Update schedule
     const updateData = {};
+    if (device_id) updateData.device_id = device_id;
     if (action) updateData.action = action.toUpperCase();
     if (time) updateData.time = time;
     if (days) updateData.days = days;
