@@ -1,3 +1,4 @@
+
 // Edit device (name/type)
 export const editDevice = async (req, res) => {
   try {
@@ -92,10 +93,39 @@ export const getDevices = async (req, res) => {
   }
 };
 
+
+
 // Add new device
 export const addDevice = async (req, res) => {
   try {
-    const { name, type } = req.body;
+    const { apiKey, name, type } = req.body;
+
+    // Validate API key
+    if (!apiKey) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'API key is required'
+      });
+    }
+    // Debug log: show user and apiKey
+    console.log('Device creation attempt:', { userId: req.user.id, apiKey });
+    // Extra debug: log apiKey type and value
+    console.log('Type of apiKey:', typeof apiKey, 'Value:', apiKey);
+    // Check that the API key exists and belongs to the same user
+    const { data: credential, error: credError } = await supabase
+      .from('credentials')
+      .select('*')
+      .eq('api_key', apiKey)
+      .eq('user_id', req.user.id)
+      .single();
+    console.log('Credential lookup result:', { credential, credError });
+    if (credError || !credential) {
+      console.warn('API key validation failed:', { apiKey, userId: req.user.id });
+      return res.status(401).json({
+        status: 'error',
+        message: 'Invalid API key or not authorized for this user'
+      });
+    }
 
     // Validation
     if (!name) {
@@ -106,14 +136,15 @@ export const addDevice = async (req, res) => {
     }
 
     const device_key = 'nx_' + uuidv4().replace(/-/g, '').slice(0, 16);
-    
+
     const { data, error } = await supabase
       .from('devices')
       .insert([{ 
         user_id: req.user.id, 
         name, 
         type: type || 'switch', 
-        device_key 
+        device_key,
+        api_key: apiKey // Store the credential API key used
       }])
       .select();
 

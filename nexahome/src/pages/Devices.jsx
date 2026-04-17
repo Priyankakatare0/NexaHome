@@ -8,7 +8,7 @@ const Devices = () => {
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [formData, setFormData] = useState({ name: '', type: 'switch' });
+  const [formData, setFormData] = useState({ name: '', type: 'switch', apiKey: '' });
 
 
   useEffect(() => {
@@ -54,11 +54,16 @@ const Devices = () => {
 
   const handleAddDevice = async (e) => {
     e.preventDefault();
+    console.log('Submitting device with apiKey:', formData.apiKey);
     try {
-      const res = await api.post('/devices', formData);
+      const res = await api.post('/devices', {
+        name: formData.name,
+        type: formData.type,
+        apiKey: formData.apiKey
+      });
       if(res.data.status === 'success') {
         setDevices([...devices, res.data.data]);
-        setFormData({ name: '', type: 'switch' });
+        setFormData({ name: '', type: 'switch', apiKey: '' });
         setShowAddForm(false);
       }
     } catch (error) {
@@ -86,6 +91,17 @@ const Devices = () => {
       {showAddForm && (
         <div className="mb-8 bg-slate-900 border border-slate-800 rounded-lg p-6">
           <form onSubmit={handleAddDevice} className="space-y-4">
+            <div>
+              <label className="block text-white text-sm font-medium mb-2">API Key</label>
+              <input
+                type="text"
+                placeholder="Enter your API key"
+                value={formData.apiKey}
+                onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
+                className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white"
+                required
+              />
+            </div>
             <div>
               <label className="block text-white text-sm font-medium mb-2">Device Name</label>
               <input
