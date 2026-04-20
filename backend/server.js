@@ -15,13 +15,14 @@ dotenv.config();
 startScheduler();
 
 const app = express();
+const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
 
 // CORS setup (allow frontend, credentials, preflight)
-const allowedOrigins = [
+const allowedOrigins = [...new Set([
+    frontendUrl,
     'http://localhost:5173',
     'http://localhost:3000',
-    'https://nexahome.onrender.com',
-];
+])];
 
 const server = http.createServer(app);
 const io = new SocketIOServer(server, {

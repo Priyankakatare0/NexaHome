@@ -29,6 +29,8 @@ import crypto from 'crypto';
 import supabase from '../config/supabase.js';
 import transporter from '../config/email.js';
 
+const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+
 // Register
 export const register = async (req, res) => {
   try {
@@ -62,7 +64,7 @@ export const register = async (req, res) => {
     }
 
     // Send verification email
-    const verifyUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify?token=${verification_token}`;
+    const verifyUrl = `${frontendUrl}/verify?token=${verification_token}`;
     const mailOptions = {
       from: process.env.SMTP_FROM || 'no-reply@nexahome.com',
       to: email,
@@ -216,7 +218,7 @@ export const forgotPassword = async (req, res) => {
   }
 
   // Send email
-  const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${token}`;
+  const resetUrl = `${frontendUrl}/reset-password/${token}`;
   const mailOptions = {
     from: process.env.SMTP_FROM || 'no-reply@nexahome.com',
     to: email,
