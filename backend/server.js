@@ -38,6 +38,8 @@ app.use(cors({
     origin: allowedOrigins,
     credentials: true,
 }));
+// Handle preflight OPTIONS requests for all routes
+app.options('*', cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -81,12 +83,12 @@ app.use((req, res) => {
     res.status(404).json({
         status: 'error',
         message: 'Route not found'
-   });
+    });
 });
 
 app.use((err, req, res) => {
     console.error('Error:', err);
-    res.status(err.status || 500).json({ 
+    res.status(err.status || 500).json({
         status: 'error',
         message: err.message || 'Internal server error',
         ...process.env.NODE_ENV === 'development' && { stack: err.stack }
