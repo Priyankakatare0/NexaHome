@@ -38,8 +38,8 @@ app.use(cors({
     origin: allowedOrigins,
     credentials: true,
 }));
-// Handle preflight OPTIONS requests for all routes
-app.options(cors());
+// Handle preflight OPTIONS requests for all routes (Express 5+ compatible)
+app.options('/*', cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
